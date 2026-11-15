@@ -1,0 +1,25 @@
+name: aisg2
+
+services:
+  postgres:
+    image: timescale/timescaledb:2.32.0-pg18
+    container_name: aisg2-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${AISG_DB_NAME:-aisg_core}
+      POSTGRES_USER: ${AISG_DB_USER:-aisg}
+      POSTGRES_PASSWORD: ${AISG_DB_PASSWORD:?Imposta AISG_DB_PASSWORD nel file .env}
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - aisg2_postgres_data:/var/lib/postgresql
+      - ./aisg2/infrastructure/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${AISG_DB_USER:-aisg} -d ${AISG_DB_NAME:-aisg_core}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+volumes:
+  aisg2_postgres_data:
